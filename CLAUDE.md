@@ -124,6 +124,9 @@ docker volume inspect mp-traefik_letsencrypt
 - Let's Encrypt: renovação automática pelo Traefik (verifica diariamente, renova 30 dias antes do vencimento)
 - Rate limit Let's Encrypt: 5 certificados falhos por hora por domínio — não fazer testes repetidos em produção
 - **Bug conhecido**: a ferramenta Write/Read do Claude Code não consegue acessar diretamente este diretório (EACCES); usar Python3 via Bash como alternativa
+- **Traefik v3 filtra containers unhealthy**: containers com Docker healthcheck falhando são ignorados pelo Traefik — não aparecem no dashboard nem recebem tráfego. Garantir que os health checks passem antes de investigar problemas de roteamento
+- **Health check: usar `127.0.0.1` em vez de `localhost`**: em containers Alpine/Node.js, `localhost` pode resolver para IPv6 (`::1`) enquanto o servidor escuta apenas em IPv4 (`0.0.0.0`). Sempre usar `127.0.0.1` explícito nos health checks
+- **Label obrigatória em containers com múltiplas redes**: quando o container está em mais de uma rede (ex: `internal` + `traefik-public`), adicionar `traefik.docker.network=traefik-public` para o Traefik saber qual interface usar
 
 ---
 
