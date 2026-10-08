@@ -30,6 +30,12 @@ services:
       - --certificatesresolvers.letsencrypt.acme.email=angelo.mcbraga@gmail.com
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
 
+      # Provider de arquivos: rotas para servicos que NAO sao containers Docker
+      # (ex.: Grafana na VM srv-grafana). Os arquivos ficam em /opt/mp-traefik/dynamic no servidor
+      # e sao recarregados sozinhos, sem reiniciar o Traefik.
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+
       # Logs de operacao
       - --log.level=INFO
 
@@ -42,6 +48,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Volume persistente para armazenar os certificados SSL
       - letsencrypt:/letsencrypt
+      # Rotas dinamicas (provider de arquivos), somente leitura. Criar o diretorio no servidor:
+      #   sudo mkdir -p /opt/mp-traefik/dynamic
+      - /opt/mp-traefik/dynamic:/etc/traefik/dynamic:ro
 
     networks:
       - traefik-public

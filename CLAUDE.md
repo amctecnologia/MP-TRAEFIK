@@ -50,6 +50,7 @@ Internet :80/:443
 | Arquivo | Finalidade |
 |---|---|
 | `docker-compose.yml` | Stack Traefik v3 — deployar uma vez no Portainer |
+| `dynamic/` | Rotas do provider de arquivos (serviços fora do Docker). No servidor ficam em `/opt/mp-traefik/dynamic`; hoje: `grafana-mp.yml` |
 | `README.md` | Documentação completa: setup, templates, cenários, troubleshooting |
 | `CLAUDE.md` | Este arquivo — contexto para o assistente em futuras sessões |
 
@@ -79,6 +80,12 @@ networks:
 
 4. Redeploy da stack do projeto no Portainer
 5. Confirmar no dashboard (`traefik.minaspneus.com.br`) que o router aparece como ENABLED
+
+---
+
+## Rotas para serviços fora do Docker (file provider)
+
+O Traefik também usa o **provider de arquivos** (`--providers.file.directory=/etc/traefik/dynamic`, com `watch`), para rotear a destinos que não são containers (labels do Docker não aceitam URL externa). A pasta do servidor `/opt/mp-traefik/dynamic` é montada somente leitura; cada arquivo `.yml` nela define routers e services e é recarregado sozinho. Exemplo em uso: `dynamic/grafana-mp.yml` (`grafana.minaspneus.com.br` → `http://10.197.2.191:30300`, projeto MP-Observability). Para adicionar outro destino: criar o arquivo no servidor (e copiar para `dynamic/` deste repositório), sem reiniciar o Traefik. Lembrar: a pasta precisa existir no servidor antes do redeploy da stack.
 
 ---
 
@@ -120,6 +127,7 @@ docker volume inspect mp-traefik_letsencrypt
 - Plataforma de deploy: **Portainer** (stacks)
 - Servidor: domínio raiz `minaspneus.com.br`
 - A stack Traefik é **completamente isolada** das stacks dos projetos — cada projeto tem sua própria stack no Portainer
+- 2026-10-08: habilitado o provider de arquivos para expor o Grafana (VM RKE2 fora do Docker); a stack no Portainer mantém o hash real do BasicAuth, o compose do repositório mantém o placeholder
 - Projeto existente que precisa migrar: **MP-SIMULADORVENDAS** (ver seção de migração no README.md)
 - Let's Encrypt: renovação automática pelo Traefik (verifica diariamente, renova 30 dias antes do vencimento)
 - Rate limit Let's Encrypt: 5 certificados falhos por hora por domínio — não fazer testes repetidos em produção

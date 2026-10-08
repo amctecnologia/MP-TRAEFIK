@@ -1,0 +1,16 @@
+# Rota para o Grafana (projeto MP-Observability), que roda numa VM RKE2 fora do Docker.
+# Copiar para /opt/mp-traefik/dynamic/ no servidor do Traefik.
+http:
+  routers:
+    grafana-mp:
+      rule: "Host(`grafana.minaspneus.com.br`)"
+      entryPoints: [websecure]
+      service: grafana-mp
+      tls:
+        certResolver: letsencrypt
+  services:
+    grafana-mp:
+      loadBalancer:
+        servers:
+          # NodePort do Grafana na VM srv-grafana; o firewall dela so aceita o IP deste servidor
+          - url: "http://10.197.2.191:30300"
