@@ -1,0 +1,15 @@
+# Rota para o Zabbix (frontend web), que roda fora do Docker.
+# Copiar para /opt/mp-traefik/dynamic/ no servidor do Traefik.
+http:
+  routers:
+    zabbix-mp:
+      rule: "Host(`zabbix.minaspneus.com.br`)"
+      entryPoints: [websecure]
+      service: zabbix-mp
+      tls:
+        certResolver: letsencrypt
+  services:
+    zabbix-mp:
+      loadBalancer:
+        servers:
+          - url: "http://10.197.2.246:8080"
