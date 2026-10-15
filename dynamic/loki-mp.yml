@@ -1,0 +1,29 @@
+# Entrada de logs no Loki (projeto MP-Observability) para hosts externos (VPS HostGator de e-mail).
+# Copiar para /opt/mp-traefik/dynamic/ no servidor do Traefik.
+# Só expõe o push e o /ready (consultas ao Loki ficam bloqueadas), com ipAllowList + basic auth.
+# O arquivo de senhas NAO vai ao Git: criar no servidor com
+#   htpasswd -nbB hostgator-mail 'SENHA' | sudo tee /opt/mp-traefik/dynamic/loki-mp.htpasswd
+http:
+  routers:
+    loki-mp:
+      rule: "Host(`loki-mp.minaspneus.com.br`) && (Path(`/loki/api/v1/push`) || Path(`/ready`))"
+      entryPoints: [websecure]
+      service: loki-mp
+      middlewares: [loki-mp-ip, loki-mp-auth]
+      tls:
+        certResolver: letsencrypt
+  middlewares:
+    loki-mp-ip:
+      ipAllowList:
+        sourceRange:
+          - "129.121.85.28/32"   # VPS HostGator (e-mail)
+    loki-mp-auth:
+      basicAuth:
+        usersFile: /etc/traefik/dynamic/loki-mp.htpasswd
+        removeHeader: true
+  services:
+    loki-mp:
+      loadBalancer:
+        servers:
+          # NodePort do Loki (loki-ingest) na VM srv-grafana; o firewall dela so aceita o IP deste servidor
+          - url: "http://10.197.2.191:30310"
